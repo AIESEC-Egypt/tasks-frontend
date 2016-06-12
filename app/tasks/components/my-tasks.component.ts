@@ -15,10 +15,13 @@ import {DND_DIRECTIVES} from "ng2-dnd/ng2-dnd";
             font-size: 0.75rem;
         }
         
-        .mark-done {
-            opacity: 0.3;
+        .donebox {
             font-size: 1.5em;
             margin-top: 0.3em;
+        }
+        
+        .mark-done {
+            opacity: 0.3;
         }
         
         .mark-done:hover {
@@ -76,16 +79,20 @@ import {DND_DIRECTIVES} from "ng2-dnd/ng2-dnd";
             <!-- Task List -->
             <div class="row">
                 <div *ngIf="errorTask" class="alert alert-danger">{{errorTask}}</div>
-                <div *ngIf="!tasks">Loading tasks ...</div>
+                <div *ngIf="tasks == null">Loading tasks ...</div>
                 <div *ngIf="tasks" class="col-xs-12 col-lg-6 col-lg-offset-3">
                     <div *ngFor="let task of tasks" class="task row" #taskEl (dragstart)="dragStart($event, task);" (dragover)="dragOver($event, taskEl);" (drop)="drop($event, task);" (touchmove)="touchMove($event, taskEl);" [attr.data-taskId]="task.id">
-                        <div class="col-xs-1 mark-done" (click)="doneTask = task;">
+                        <div *ngIf="!task.done" class="col-xs-1 donebox mark-done" (click)="doneTask = task;">
                             <i class="fa fa-mark-done" aria-hidden="true"></i>
+                        </div>
+                        <div *ngIf="task.done" class="col-xs-1 donebox">
+                            <i class="fa fa-check-circle-o" aria-hidden="true"></i>
                         </div>
                         <div class="col-xs-10">
                             <span>{{task.name}}</span><br />
                             <div class="clearfix">
-                                <span class="text-muted pull-xs-left">Estimated:&nbsp;{{getTaskTime(task.estimated).toString()}}</span>
+                                <span *ngIf="!task.done" class="text-muted pull-xs-left">Estimated:&nbsp;{{getTaskTime(task.estimated).toString()}}</span>
+                                <span *ngIf="task.done" class="text-muted pull-xs-left">Waiting for approval</span>
                                 <span *ngIf="task.due" class="text-muted pull-xs-right {{getDateClasses(task.due)}}">Due:&nbsp;{{getDate(task.due)}}</span>
                             </div>
                         </div>
@@ -162,7 +169,7 @@ export class MyTasksComponent {
         event.preventDefault();
         this.currentDndTask = task;
         this.currentTouchTarget = event.target;
-        this.currentTouchShadow = this._renderer.createElement(taskEl, 'div');
+        this.currentTouchShadow = this._renderer.createElement(taskEl, 'div', null);
         this.currentTouchShadow.style.position = "fixed";
         this.currentTouchShadow.style.height = taskEl.clientHeight;
         this.currentTouchShadow.style.width = taskEl.clientWidth;
@@ -300,7 +307,10 @@ export class MyTasksComponent {
     proceedDone(done) {
         if(done) {
             for(var i in this.tasks) {
-                if(this.tasks[i].id == this.doneTask.id) this.tasks.splice(parseInt(i), 1);
+                if(this.tasks[i].id == this.doneTask.id) {
+                    this.tasks[i].done = true;
+                    this.tasks[i].done_at = new Date();
+                }
             }
             this.doneTask = null;
         }

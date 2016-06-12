@@ -9,7 +9,7 @@ export class Task {
     estimated:number;
     needed:number;
     due:Date;
-    done:number;
+    done:boolean;
     done_at:Date;
     approved:boolean;
     approved_by:Person;
